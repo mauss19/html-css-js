@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Minimalista - Nueva Generación</title>
+    <!-- Cargamos los iconos estilo outline para que coincidan con la imagen -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ========================================= */
+        /* ESTILOS GLOBALES (Basados en image_934e3e.png) */
+        /* ========================================= */
+        body {
+            background-color: #204051; /* El tono azul oscuro del fondo */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .contenedor-formulario {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Icono de usuario grande superior */
+        .avatar-superior {
+            font-size: 70px;
+            color: #cae4db;
+            border: 2px solid #cae4db;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .formulario-minimalista {
+            width: 100%;
+        }
+
+        /* Fila de nombre y apellido dividida */
+        .fila-doble {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .fila-doble .grupo-input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* Filas normales con iconos a la izquierda */
+        .fila-formulario {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        /* Iconos laterales */
+        .icono-lateral {
+            font-size: 24px;
+            color: #cae4db;
+            width: 35px;
+            margin-right: 15px;
+            text-align: center;
+        }
+
+        /* Contenedor del input individual */
+        .grupo-input {
+            position: relative;
+            flex-grow: 1;
+        }
+
+        /* Cajas de texto idénticas a la imagen */
+        .grupo-input input {
+            width: 100%;
+            background-color: transparent; /* Fondo transparente */
+            border: 2px solid #cae4db;     /* Borde claro y delgado */
+            padding: 12px 15px;
+            color: #ffffff;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        /* Marcador de posición (Placeholder) */
+        .grupo-input input::placeholder {
+            color: #cae4db;
+            opacity: 0.8;
+        }
+
+        /* ========================================= */
+        /* TU EFECTO PERSONALIZADO: ENFOQUE MORADO    */
+        /* ========================================= */
+        .grupo-input input:focus {
+            border-color: #9b5de5; /* El morado que elegiste */
+            box-shadow: 0 0 8px rgba(155, 93, 229, 0.4);
+        }
+
+        /* El botón de envío alineado a la derecha abajo */
+        .contenedor-boton {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-submit {
+            background-color: transparent;
+            border: 2px solid #cae4db;
+            color: #ffffff;
+            padding: 10px 40px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 45%; /* Ocupa proporcionalmente el espacio de la imagen */
+        }
+
+        /* Efecto al pasar el cursor sobre el botón (Combina con tus focos) */
+        .btn-submit:hover {
+            border-color: #9b5de5;
+            color: #9b5de5;
+            background-color: rgba(155, 93, 229, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="contenedor-formulario">
+    <!-- Círculo de Usuario Superior -->
+    <div class="avatar-superior">
+        <i class="fa-regular fa-user"></i>
+    </div>
+
+    <form class="formulario-minimalista" id="miFormulario">
+        
+        <!-- Fila Especial: First Name & Last Name (No llevan icono al lado) -->
+        <div class="fila-doble">
+            <div class="grupo-input">
+                
+                <input type="text" id="firstName" placeholder="First " required autocomplete="one-time-code">
+            </div>
+            <div class="grupo-input">
+                <input type="text" id="lastName" placeholder="Last Name" required>
+            </div>
+        </div>
+
+        <!-- Fila: Username -->
+        <div class="fila-formulario">
+            <div class="icono-lateral"><i class="fa-regular fa-user"></i></div>
+            <div class="grupo-input">
+                <input type="text" id="username" placeholder="Nombre" required>
+            </div>
+        </div>
+
+        <!-- Fila: Email -->
+        <div class="fila-formulario">
+            <div class="icono-lateral"><i class="fa-regular fa-envelope"></i></div>
+            <div class="grupo-input">
+                <input type="email" id="email" placeholder="Email" required>
+            </div>
+        </div>
+
+        <!-- Fila: Password -->
+        <div class="fila-formulario">
+            <div class="icono-lateral"><i class="fa-solid fa-lock"></i></div>
+            <div class="grupo-input">
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+        </div>
+
+        <!-- Fila: Confirm Password -->
+        <div class="fila-formulario">
+            <div class="icono-lateral"><i class="fa-solid fa-lock-open"></i></div>
+            <div class="grupo-input">
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+            </div>
+        </div>
+
+        <!-- Fila: Phone Number -->
+        <div class="fila-formulario">
+            <div class="icono-lateral"><i class="fa-solid fa-phone"></i></div>
+            <div class="grupo-input">
+                <input type="tel" id="phoneNumber" placeholder="Phone Number">
+            </div>
+        </div>
+
+        <!-- Botón Submit -->
+        <div class="contenedor-boton">
+            <button type="submit" class="btn-submit">Submit</button>
+        </div>
+
+    </form>
+</div>
+
+
+
+ <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        // Le asignamos un valor que el navegador no entiende para romper el historial
+        document.getElementById('firstName').setAttribute('autocomplete', 'new-password');
+        document.getElementById('lastName').setAttribute('autocomplete', 'new-password');
+        document.getElementById('email').setAttribute('autocomplete', 'new-password');
+         document.getElementById('username').setAttribute('autocomplete', 'new-password');
+         //pude cambiarlo aparaecia el historial de los nombre y contraseñas
+    });
+</script>
+    
+
+
+</body>
+</html>

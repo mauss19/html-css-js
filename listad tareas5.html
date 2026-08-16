@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Contenedor fondo madera */
+        .wood-background {
+            display: flex;
+            width: 100%;
+            max-width: 900px;  
+            height: auto;       
+            max-height: 85vh;  
+            background-color: #8f461b; 
+            border-radius: 12px;
+            padding: 25px 20px; 
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            border: 1px solid wheat;
+            box-shadow: inset 0px 0px 50px rgba(0, 0, 0, 0.6), 
+                        inset 0px 0px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .side-panel {
+            width: 8%;         
+            height: 70vh;      
+            max-height: 500px; 
+            background-color: black;
+            border-radius: 4px;
+        }
+
+        /* Contenedor de la app */
+        .todo-container {
+            width: 75%; 
+            background-color: #e0dbd5; 
+            border-radius: 15px;
+            padding: 25px; 
+            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Textos e Inputs globales */
+        .title,
+        .task-input,
+        .priority-select,
+        .add-btn,
+        .filter-select,
+        .delete-btn {
+            color: #ffffff !important;
+        }
+        
+        .priority-select option, 
+        .filter-select option {
+            background-color: #f4834f;
+            color: #ffffff;
+        }
+
+        .task-item span {
+            color: #4a2306;
+            font-weight: bold;
+            text-shadow: none;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed span {
+            color: #888888;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .title {
+            font-size: 2.5rem; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+            color: #4a2306 !important; 
+        }
+
+        .title-divider {
+            border: none;
+            height: 4px; 
+            background-color: #f4834f; 
+            margin-bottom: 20px;
+        }
+
+        /* Cabecera: Título + Botón Hola */
+        .header-row {
+            display: flex;
+            align-items: center;  
+            gap: 50px;            
+            margin-bottom: 5px;   
+        }
+
+        
+
+        /* Formulario de entrada */
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .task-input {
+            flex: 1;
+            background-color: #f4834f; 
+            border: none;
+            border-radius: 25px; 
+            padding: 10px 18px;  
+            font-size: 1rem;  
+        }
+
+        .task-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .priority-select, 
+        .add-btn {
+            background-color: #f4834f; 
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .priority-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white'><polygon points='0,0 12,0 6,6'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 35px;
+        }
+
+        /* Filtros */
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            border: 2px solid #e16015; 
+            border-radius: 25px;
+            padding: 4px;
+            margin-bottom: 20px;
+            background-color: transparent;
+        }
+
+        .filter-select {
+            background-color: #f4834f; 
+            border: none;
+            border-radius: 18px;
+            padding: 8px 30px 8px 15px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white'><polygon points='0,0 12,0 6,6'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        /* Lista de tareas */
+        .task-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 38vh; 
+            overflow-y: auto;  
+            padding-right: 5px;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #f4834f; 
+            border-radius: 18px;
+            padding: 10px 18px; 
+            background-color: #fcfbfa; 
+        }
+
+        .task-item label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 80%;
+        }
+
+        .task-item input[type="checkbox"] {
+            width: 18px; 
+            height: 18px;
+            cursor: pointer;
+            accent-color: #e16015; 
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ba3c13 !important; 
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wood-background">
+        <!-- Panel Izquierdo -->
+        <div class="side-panel left-panel"></div>
+
+        <!-- Contenedor Principal de Tareas -->
+        <main class="todo-container">
+            <div class="header-row">
+                <h1 class="title">Tareas</h1>
+        </div>
+            
+            
+            <hr class="title-divider">
+
+            <!-- Fila de Entrada de Datos -->
+            <div class="input-row">
+                <input type="text" id="taskInput" class="task-input" placeholder="Nueva tarea...">
+                <select id="prioritySelect" class="priority-select">
+                    <option value="MEDIA">Media</option>
+                    <option value="ALTA">Alta</option>
+                    <option value="BAJA">Baja</option>
+                </select>
+                <button id="addBtn" class="add-btn">Añadir</button>
+            </div>
+
+            <!-- Fila de Filtros -->
+            <div class="filter-row">
+                <select id="filterSelect" class="filter-select">
+                    <option value="todas">Todas</option>
+                    <option value="completadas">Completadas</option>
+                    <option value="pendientes">Pendientes</option>
+                </select>
+                <select id="sortSelect" class="filter-select">
+                    <option value="sin-orden">Sin ordenar</option>
+                    <option value="alta-baja">Prioridad: Alta a Baja</option>
+                </select>
+            </div>
+
+            <!-- Lista de Tareas -->
+            <ul id="taskList" class="task-list">
+                <!-- Dinámico -->
+            </ul>
+        </main>
+
+        <!-- Panel Derecho -->
+        <div class="side-panel right-panel"></div>
+    </div>
+
+    <script>
+        let tareas = [
+            { id: 1, text: "leer", priority: "MEDIA", completed: false },
+            { id: 2, text: "comer las v", priority: "ALTA", completed: false },
+            { id: 3, text: "ir al baño 6", priority: "ALTA", completed: false },
+            { id: 4, text: "lavar el carro", priority: "BAJA", completed: false },
+            { id: 5, text: "comprar metamucil", priority: "ALTA", completed: false },
+            { id: 6, text: "estudiar", priority: "ALTA", completed: false }
+        ];
+
+        const taskList = document.getElementById('taskList');
+        const taskInput = document.getElementById('taskInput');
+        const prioritySelect = document.getElementById('prioritySelect');
+        const addBtn = document.getElementById('addBtn');
+        const filterSelect = document.getElementById('filterSelect');
+        const sortSelect = document.getElementById('sortSelect');
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            let tareasFiltradas = [...tareas];
+
+            // 1. Filtro
+            const filtro = filterSelect.value;
+            if (filtro === 'completadas') {
+                tareasFiltradas = tareasFiltradas.filter(t => t.completed);
+            } else if (filtro === 'pendientes') {
+                tareasFiltradas = tareasFiltradas.filter(t => !t.completed);
+            }
+
+            // 2. Orden
+            if (sortSelect.value === 'alta-baja') {
+                const ordenPrioridad = { 'ALTA': 3, 'MEDIA': 2, 'BAJA': 1 };
+                tareasFiltradas.sort((a, b) => ordenPrioridad[b.priority] - ordenPrioridad[a.priority]);
+            }
+
+            // 3. Renderizar
+            tareasFiltradas.forEach(tarea => {
+                const li = document.createElement('li');
+                li.className = `task-item ${tarea.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <label>
+                        <input type="checkbox" ${tarea.completed ? 'checked' : ''} onchange="toggleTask(${tarea.id})">
+                        <span>[${tarea.priority}] ${tarea.text}</span>
+                    </label>
+                    <button class="delete-btn" onclick="deleteTask(${tarea.id})">Eliminar</button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (text === '') return;
+
+            const nuevaTarea = {
+                id: Date.now(),
+                text: text,
+                priority: prioritySelect.value,
+                completed: false
+            };
+
+            tareas.push(nuevaTarea);
+            taskInput.value = '';
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            tareas = tareas.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tareas = tareas.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        addBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+        filterSelect.addEventListener('change', renderTasks);
+        sortSelect.addEventListener('change', renderTasks);
+
+        renderTasks();
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronómetro con Voz de Optimus Prime</title>
+    <style>
+        /* ========================================= */
+        /* ESTILOS GLOBALES                          */
+        /* ========================================= */
+        body {
+            background-color: #655f5f;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Botón de desbloqueo de seguridad */
+        #btnDesbloqueo {
+            background-color: #39ff14;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+            transition: all 0.2s ease;
+        }
+        #btnDesbloqueo.oculto {
+            display: none;
+        }
+
+        /* Contenedor principal: Grande y Cuadrado */
+        .cronometro-circulo {
+            width: 400px;
+            height: 400px;
+            background-color: #1a1a1a;
+            border-radius: 12px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Lienzo SVG Completo */
+        .anillo-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Pista de fondo */
+        .circulo-pista {
+            fill: none;
+            stroke: rgba(232, 15, 65, 0.4); 
+            stroke-width: 2.5;
+            transition: stroke 0.3s ease;
+        }
+
+        /* Arco verde superior */
+        .arco-verde {
+            fill: none;
+            stroke: transparent; 
+            stroke-width: 2.5; 
+            stroke-dasharray: 125.6 251.3; 
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke 0.3s ease;
+        }
+
+        /* Órbita del Nodo */
+        .grupo-nodo-giratorio {
+            transform-origin: 50px 50px; 
+            animation: rotarCirculo 60s linear infinite; 
+            animation-play-state: paused; 
+        }
+
+        .nodo-indicador-svg {
+            fill: magenta;
+            transition: fill 0.3s ease;
+        }
+
+        .animacion-activa {
+            animation-play-state: running !important;
+        }
+
+        @keyframes rotarCirculo {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Interfaz interna */
+        .interfaz-interna {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            margin-top: 20px;
+            background: transparent;
+        }
+
+        .tiempo-display {
+            color: #ffffff;
+            font-size: 54px; 
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            user-select: none;
+            transition: color 0.3s ease;
+        }
+
+        /* Línea divisoria bajo números */
+        .linea-sub-numeros {
+            width: 180px;
+            height: 2px;
+            background-color: #ffffff;
+            margin-top: 5px;
+            margin-bottom: 25px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Controles */
+        .controles {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .btn-control {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+        }
+
+        .btn-control:hover { opacity: 0.8; }
+        .btn-control:active { transform: scale(0.9); }
+
+        .icono-stop {
+            width: 20px;
+            height: 20px;
+            background-color: #ffffff;
+            border-radius: 2px;
+            transition: background-color 0.3s ease;
+        }
+
+        .icono-play {
+            width: 0;
+            height: 0;
+            border-top: 13px solid transparent;
+            border-bottom: 13px solid transparent;
+            border-left: 24px solid #ffffff;
+            margin-left: 4px;
+            transition: border-left-color 0.3s ease;
+        }
+
+        .icono-pausa {
+            width: 18px;
+            height: 24px;
+            border-left: 6px solid #ffffff;
+            border-right: 6px solid #ffffff;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        /* ======================================================= */
+        /* REGLAS DE FLUCTUACIÓN Verde                             */
+        /* ======================================================= */
+        .fluctuar-verde-svg { animation: verdeAnillo 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeAnillo {
+            0% { stroke: rgba(232, 15, 65, 0.4); filter: drop-shadow(0 0 0px transparent); }
+            100% { stroke: #39ff14; filter: drop-shadow(0 0 10px rgba(57, 255, 20, 0.9)); }
+        }
+
+        .arco-activo { animation: verdeArco 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeArco {
+            0% { stroke: rgba(57, 255, 20, 0.3); filter: drop-shadow(0 0 2px rgba(57, 255, 20, 0.3)); }
+            100% { stroke: #39ff14; filter: drop-shadow(0 0 12px rgba(57, 255, 20, 1)); }
+        }
+
+        .fluctuar-verde-texto { animation: verdeTexto 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeTexto {
+            0% { color: #ffffff; filter: drop-shadow(0 0 0px transparent); }
+            100% { color: #39ff14; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.9)); }
+        }
+
+        .linea-activa { animation: verdeLineaSub 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeLineaSub {
+            0% { background-color: #ffffff; filter: drop-shadow(0 0 0px transparent); }
+            100% { background-color: #39ff14; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.9)); }
+        }
+
+        .fluctuar-verde-stop { animation: verdeStop 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeStop {
+            0% { background-color: #ffffff; filter: drop-shadow(0 0 0px transparent); }
+            100% { background-color: #39ff14; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.9)); }
+        }
+
+        .fluctuar-verde-control { animation: verdeControl 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeControl {
+            0% { border-color: #ffffff; border-left-color: #ffffff; filter: drop-shadow(0 0 0px transparent); }
+            100% { border-color: #39ff14; border-left-color: #39ff14; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.9)); }
+        }
+
+        .fluctuar-verde-nodo { animation: verdeNodo 2s ease-in-out infinite alternate !important; }
+        @keyframes verdeNodo {
+            0% { fill: magenta; filter: drop-shadow(0 0 0px transparent); }
+            100% { fill: #39ff14; filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.9)); }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="btnDesbloqueo">🔊 CLIC AQUÍ ANTES PARA ACTIVAR SONIDO</button>
+
+    <div class="cronometro-circulo">
+        
+        <svg class="anillo-svg" viewBox="0 0 100 100">
+            <circle class="circulo-pista" id="pistaSvg" cx="50" cy="50" r="40"></circle>
+            <circle class="arco-verde" id="arcoVerde" cx="50" cy="50" r="40"></circle>
+            
+            <g class="grupo-nodo-giratorio" id="orbitaNodo">
+                <circle class="nodo-indicador-svg" id="nodo" cx="50" cy="10" r="3"></circle>
+            </g>
+        </svg>
+
+        <div class="interfaz-interna">
+            <div class="tiempo-display" id="display">00:00</div>
+            <div class="linea-sub-numeros" id="lineaSub"></div>
+            
+            <div class="controles">
+                <button class="btn-control" id="btnStop" title="Reiniciar">
+                    <div class="icono-stop" id="iconoStop"></div>
+                </button>
+                <button class="btn-control" id="btnPlayPausa" title="Iniciar/Pausar">
+                    <div class="icono-play" id="iconoControl"></div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let tiempoActivo = false;
+        let IDIntervalo = null;
+        let totalSegundos = 0;
+        let audioOptimus = null; 
+
+        const display = document.getElementById('display');
+        const lineaSub = document.getElementById('lineaSub'); 
+        const btnPlayPausa = document.getElementById('btnPlayPausa');
+        const btnStop = document.getElementById('btnStop');
+        const iconoControl = document.getElementById('iconoControl');
+        const orbitaNodo = document.getElementById('orbitaNodo');
+        
+        const pistaSvg = document.getElementById('pistaSvg');
+        const arcoVerde = document.getElementById('arcoVerde'); 
+        const nodo = document.getElementById('nodo');
+        const iconoStop = document.getElementById('iconoStop');
+        const btnDesbloqueo = document.getElementById('btnDesbloqueo');
+
+        // Intentar usar un enlace de audio alternativo ultra compatible
+        const urlAudio = 'https://actions.google.com/sounds/v1/digital_watch/digital_watch_alarm_long.ogg';
+
+        // Evento para romper el bloqueo de los navegadores
+        btnDesbloqueo.addEventListener('click', function() {
+            audioOptimus = new Audio(urlAudio);
+            audioOptimus.volume = 0.0; // Silencioso solo para activarlo
+            audioOptimus.play().then(() => {
+                audioOptimus.pause();
+                audioOptimus.volume = 1.0;
+                btnDesbloqueo.classList.add('oculto'); // Ocultar el botón si tuvo éxito
+                console.log("Audio desbloqueado con éxito.");
+            }).catch(e => {
+                console.log("Error al intentar desbloquear:", e);
+            });
+        });
+
+        function hablarComoRobot() {
+            if (!audioOptimus) {
+                audioOptimus = new Audio(urlAudio);
+            }
+            audioOptimus.pause();
+            audioOptimus.currentTime = 0;
+            audioOptimus.volume = 1.0; 
+            
+            audioOptimus.play().catch(error => {
+                console.log("Bloqueo del navegador persistente:", error);
+            });
+        }
+
+        function actualizarDisplay() {
+            let minutes = Math.floor(totalSegundos / 60);
+            let seconds = totalSegundos % 60;
+            let strMinutes = minutes < 10 ? '0' + minutes : minutes;
+            let strSeconds = seconds < 10 ? '0' + seconds : seconds;
+            display.textContent = `${strMinutes}:${strSeconds}`;
+        }
+
+        btnPlayPausa.addEventListener('click', function() {
+            if (!tiempoActivo) {
+                tiempoActivo = true;
+                iconoControl.className = "icono-pausa";
+                
+                hablarComoRobot();
+
+                orbitaNodo.classList.add('animacion-activa');
+                pistaSvg.classList.add('fluctuar-verde-svg');
+                arcoVerde.classList.add('arco-activo'); 
+                display.classList.add('fluctuar-verde-texto');
+                lineaSub.classList.add('linea-activa'); 
+                nodo.classList.add('fluctuar-verde-nodo');
+                iconoStop.classList.add('fluctuar-verde-stop');
+                iconoControl.classList.add('fluctuar-verde-control');
+                
+                IDIntervalo = setInterval(function() {
+                    totalSegundos++;
+                    actualizarDisplay();
+                }, 1000);
+
+            } else {
+                tiempoActivo = false;
+                iconoControl.className = "icono-play";
+                clearInterval(IDIntervalo);
+                
+                if (audioOptimus) audioOptimus.pause();
+                
+                orbitaNodo.classList.remove('animacion-activa');
+                pistaSvg.classList.remove('fluctuar-verde-svg');
+                arcoVerde.classList.remove('arco-activo');
+                display.classList.remove('fluctuar-verde-texto');
+                lineaSub.classList.remove('linea-activa'); 
+                nodo.classList.remove('fluctuar-verde-nodo');
+                iconoStop.classList.remove('fluctuar-verde-stop');
+                iconoControl.classList.remove('fluctuar-verde-control');
+            }
+        });
+
+        btnStop.addEventListener('click', function() {
+            tiempoActivo = false;
+            clearInterval(IDIntervalo);
+            totalSegundos = 0;
+            actualizarDisplay();
+            iconoControl.className = "icono-play";
+            
+            if (audioOptimus) {
+                audioOptimus.pause();
+                audioOptimus.currentTime = 0;
+            }
+
+            orbitaNodo.classList.remove('animacion-activa');
+            pistaSvg.classList.remove('fluctuar-verde-svg');
+            arcoVerde.classList.remove('arco-activo');
+            display.classList.remove('fluctuar-verde-texto');
+            lineaSub.classList.remove('linea-activa'); 
+            nodo.classList.remove('fluctuar-verde-nodo');
+            iconoStop.classList.remove('fluctuar-verde-stop');
+            iconoControl.classList.remove('fluctuar-verde-control');
+            
+            orbitaNodo.style.animation = 'none';
+            orbitaNodo.offsetHeight; 
+            orbitaNodo.style.animation = null;
+        });
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

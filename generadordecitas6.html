@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Citas Aleatorias</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg,wheat);
+            padding: 20px;
+        }
+
+        /* Contenedor principal */
+        .quote-container {
+            background-color: black;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            /* Recorta la línea animada en las esquinas inferiores redondas */
+            overflow: hidden; 
+        }
+
+        /* Contenedor del texto con efecto de transición */
+        .quote-box {
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .quote-box.fade {
+            opacity: 0;
+        }
+
+        .quote-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color:white;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .quote-text::before {
+            content: "“ ";
+            font-size: 2rem;
+            color: red;
+        }
+
+        .quote-text::after {
+            content: " ”";
+            font-size: 2rem;
+            color:red;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        /* Botones */
+        .buttons-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Margen inferior extra para que los botones no toquen la línea de 5px */
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-next {
+            background-color: black;
+            border: solid magenta;
+            color: #ffffff;
+            padding: 12px 24px;
+            font-size: 1rem;
+        }
+
+        .btn-next:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-copy {
+            background-color: black;
+            color: #57606f;
+            border: solid magenta;
+            padding: 12px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-copy:hover {
+            background-color: #dfe4ea;
+        }
+
+        /* Alerta flotante para el copiado */
+        .toast {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: blanchedalmond;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .toast.show {
+            top: 15px;
+            opacity: 1;
+        }
+
+        /* Estilo de la línea fluctuante del borde inferior */
+        .animated-border-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            /* Alto de 5px para que suba exactamente esa distancia por los laterales */
+            height: 5px; 
+            /* Gradiente dinámico de color que simula el movimiento */
+            background: linear-gradient(90deg, transparent, #d33e19, #2ecc71,#e919b5,#d72b2b, transparent);
+            background-size: 200% 100%;
+            animation: fluctuateLine 4s linear infinite alternate;
+            pointer-events: none;
+        }
+
+        /* Animación de oscilación (Izquierda a Derecha) */
+        @keyframes fluctuateLine {
+            0% {
+                background-position: 0% 0%;
+            }
+            100% {
+                background-position: 100% 0%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quote-container">
+        <!-- Notificación de copiado -->
+        <div class="toast" id="toast">¡Cita copiada!</div>
+
+        <!-- Bloque de contenido -->
+        <div class="quote-box" id="quote-box">
+            <p class="quote-text" id="quote">Cargando pensamiento...</p>
+            <p class="quote-author" id="author">- Anónimo</p>
+        </div>
+
+        <!-- Acciones -->
+        <div class="buttons-row">
+            <button class="btn btn-copy" onclick="copyQuote()">
+                📋 Copiar
+            </button>
+            <button class="btn btn-next" onclick="getNewQuote()">
+                Siguiente Cita
+            </button>
+        </div>
+
+        <!-- Línea animada añadida en el borde inferior -->
+        <div class="animated-border-line"></div>
+    </div>
+
+    <script>
+        // Banco de datos local con citas de desarrollo, ciencia y filosofía
+        const quotesData = [
+            { text: "No te preocupes si no funciona bien. Si todo funcionara correctamente, estarías despedido.", author: "Mosher's Law of Software Engineering" },
+            { text: "La lógica te llevará desde A hasta B. La imaginación te llevará a todas partes.", author: "Albert Einstein" },
+            { text: "El código es como el humor. Cuando tienes que explicarlo, es malo.", author: "Cory House" },
+            { text: "Hazlo simple, tan simple como sea posible, pero no más.", author: "Albert Einstein" },
+            { text: "La mejor forma de predecir el futuro es inventarlo.", author: "Alan Kay" },
+            { text: "No dejes que los comentarios de la gente te detengan de hacer lo que amas.", author: "Anónimo" },
+            { text: "Hablar es barato. Muéstrame el código.", author: "Linus Torvalds" },
+            { text: "La paciencia es amarga, pero su fruto es dulce.", author: "Jean-Jacques Rousseau" }
+        ];
+
+        const quoteBox = document.getElementById('quote-box');
+        const quoteText = document.getElementById('quote');
+        const quoteAuthor = document.getElementById('author');
+        const toast = document.getElementById('toast');
+
+        let lastIndex = -1;
+
+        function getNewQuote() {
+            // Añadimos la clase de opacidad para la transición
+            quoteBox.classList.add('fade');
+
+            // Esperamos a que la animación de salida termine (300ms)
+            setTimeout(() => {
+                let randomIndex;
+                
+                // Bucle para evitar que se repita la misma cita consecutivamente
+                do {
+                    randomIndex = Math.floor(Math.random() * quotesData.length);
+                } while (randomIndex === lastIndex);
+
+                lastIndex = randomIndex;
+                const selectedQuote = quotesData[randomIndex];
+
+                // Actualizamos los textos
+                quoteText.innerText = selectedQuote.text;
+                quoteAuthor.innerText = `- ${selectedQuote.author}`;
+
+                // Quitamos la clase para que aparezca suavemente
+                quoteBox.classList.remove('fade');
+            }, 300);
+        }
+
+        function copyQuote() {
+            const fullText = `"${quoteText.innerText}" ${quoteAuthor.innerText}`;
+            
+            // API nativa de portapapeles
+            navigator.clipboard.writeText(fullText).then(() => {
+                // Mostrar notificación visual temporal
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+            });
+        }
+
+        // Cargar una cita al iniciar la página automáticamente
+        getNewQuote();
+    </script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Neumórfica Digital</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a365d; /* Fondo azul oscuro */
+        }
+
+        .calculator-wrapper {
+            position: relative;
+        }
+
+        /* Cuerpo de la calculadora */
+        .calculator {
+            background-color: #333333; 
+            padding: 30px;
+            border-radius: 30px;
+            border: solid wheat 1px;
+            box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.5);
+            width: 340px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Pantalla */
+        .display {
+            background-color: magenta;
+            color: wheat; 
+            height: 100px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center; 
+            padding: 0 20px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 0.05em; 
+            margin-bottom: 30px;
+            box-shadow: inset 5px 5px 10px rgba(0,0,0,0.8);
+            overflow-x: auto;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            background-color: #333333;
+            color: wheat;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 500;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.1s ease;
+            box-shadow: 
+                5px 5px 10px magenta, 
+                -5px -5px 10px wheat;
+        }
+
+        .double-btn {
+            width: 135px;
+            border-radius: 30px;
+        }
+
+        .btn:active {
+            box-shadow: 
+                inset 5px 5px 10px #1e1e1e, 
+                inset -5px -5px 10px #484848;
+            font-size: 1.4rem;
+        }
+
+        /* Lienzo compartido para Fuegos Artificiales y Lluvia Matrix */
+        #effectsCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-wrapper" id="wrapper">
+        <canvas id="effectsCanvas"></canvas>
+
+        <div class="calculator">
+            <div class="display" id="display">0</div>
+
+            <div class="row">
+                <button class="btn double-btn" id="btn-clear" onclick="clearDisplay()">C</button>
+                <button class="btn" onclick="deleteLast()">&larr;</button>
+                <button class="btn" onclick="appendOperator('%')">%</button>
+            </div>
+
+            <div class="row">
+                <button class="btn" onclick="appendNumber('7')">7</button>
+                <button class="btn" onclick="appendNumber('8')">8</button>
+                <button class="btn" onclick="appendNumber('9')">9</button>
+                <button class="btn" onclick="appendOperator('*')">X</button>
+            </div>
+
+            <div class="row">
+                <button class="btn" onclick="appendNumber('4')">4</button>
+                <button class="btn" onclick="appendNumber('5')">5</button>
+                <button class="btn" onclick="appendNumber('6')">6</button>
+                <button class="btn" onclick="appendOperator('-')">-</button>
+            </div>
+
+            <div class="row">
+                <button class="btn" onclick="appendNumber('1')">1</button>
+                <button class="btn" onclick="appendNumber('2')">2</button>
+                <button class="btn" onclick="appendNumber('3')">3</button>
+                <button class="btn" onclick="appendOperator('+')">+</button>
+            </div>
+
+            <div class="row">
+                <button class="btn double-btn" onclick="appendNumber('0')">0</button>
+                <button class="btn" onclick="appendNumber('.')">.</button>
+                <button class="btn" id="btn-equal" onclick="calculate()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const canvas = document.getElementById('effectsCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('wrapper');
+        const btnClear = document.getElementById('btn-clear');
+
+        let currentInput = '';
+        
+        // Controladores de animación
+        let activeEffect = null; // Puede ser 'fireworks' o 'matrix'
+        let particles = [];      // Para fuegos artificiales
+        let matrixColumns = [];  // Para el efecto Matrix
+        let matrixTimeout = null;
+
+        const fontSize = 14;
+
+        function resizeCanvas() {
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+            setupMatrix();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- LÓGICA DE LA CALCULADORA ---
+        function updateDisplay(value) {
+            display.innerText = value || '0';
+        }
+
+        function appendNumber(number) {
+            if (number === '.' && currentInput.includes('.')) return;
+            if (currentInput === '0' && number !== '.') {
+                currentInput = number;
+            } else {
+                currentInput += number;
+            }
+            updateDisplay(currentInput);
+        }
+
+        function appendOperator(operator) {
+            if (currentInput === '') return;
+            const lastChar = currentInput.slice(-1);
+            if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+                currentInput = currentInput.slice(0, -1) + operator;
+            } else {
+                currentInput += operator;
+            }
+            updateDisplay(currentInput);
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            updateDisplay('0');
+            activeEffect = 'fireworks';
+            launchFireworks();
+        }
+
+        function deleteLast() {
+            currentInput = currentInput.slice(0, -1);
+            updateDisplay(currentInput);
+        }
+
+      
+
+function calculate() {
+    try {
+        // 1. SI LA PANTALLA ESTÁ VACÍA: No hace nada y no lanza el efecto
+        if (currentInput === '') return;
+        
+        // Guardamos lo que había antes de calcular para comparar
+        let previousInput = currentInput;
+        
+        // Realiza la operación matemática
+        let result = eval(currentInput);
+        
+        if (!Number.isInteger(result)) {
+            result = Math.round(result * 100000) / 100000;
+        }
+        
+        currentInput = result.toString();
+        updateDisplay(currentInput);
+        
+        // 2. FILTRO CRÍTICO: Solo lanza Matrix si el resultado es válido 
+        // y si realmente se hizo un cálculo nuevo (evita que explote si presionas '=' muchas veces sobre el mismo número)
+        if (currentInput !== 'Error' && currentInput !== previousInput) {
+            startMatrixEffect();
+        }
+
+    } catch (error) {
+        // 3. SI DA ERROR (Ej. poner "5++"): Muestra error, limpia y NO lanza el efecto
+        updateDisplay('Error');
+        currentInput = '';
+        activeEffect = null; // Asegura que el canvas se quede limpio
+    }
+}
+
+
+        // --- SISTEMA 1: FUEGOS ARTIFICIALES ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.01;
+                this.gravity = 0.06;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, Math.random() * 2 + 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+        }
+
+        function launchFireworks() {
+            const rect = btnClear.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const originX = (rect.left - wrapperRect.left) + (rect.width / 2);
+            const originY = (rect.top - wrapperRect.top) + (rect.height / 2);
+            const colors = ['#ff00ff', '#ff66ff', '#f5deb3', '#ffff00', '#00ffff'];
+
+            particles = [];
+            for (let i = 0; i < 120; i++) {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new Particle(originX, originY, randomColor));
+            }
+        }
+
+        // --- SISTEMA 2: LLUVIA MATRIX ---
+        function setupMatrix() {
+            const columns = Math.floor(canvas.width / fontSize);
+            matrixColumns = [];
+            for (let i = 0; i < columns; i++) {
+                // Posición Y inicial aleatoria por encima de la pantalla
+                matrixColumns[i] = Math.random() * -100; 
+            }
+        }
+
+        function startMatrixEffect() {
+            activeEffect = 'matrix';
+            setupMatrix();
+            
+            // Detener el efecto automáticamente tras 2.5 segundos
+            clearTimeout(matrixTimeout);
+            matrixTimeout = setTimeout(() => {
+                activeEffect = null;
+            }, 2500);
+        }
+
+        function drawMatrix() {
+            // Fondo negro semitransparente que crea el rastro de la lluvia digital
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Estilo del texto: tipografía monospace verde brillante icónica de Matrix
+            ctx.fillStyle = '#0f0'; 
+            ctx.font = fontSize + 'px monospace';
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = '#0f0';
+
+            const matrixChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ日ハミヒーウシナモヌルヲ';
+
+            for (let i = 0; i < matrixColumns.length; i++) {
+                const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                const x = i * fontSize;
+                const y = matrixColumns[i] * fontSize;
+
+                ctx.fillText(char, x, y);
+
+                // Si la lluvia llega al fondo, tiene una probabilidad aleatoria de reiniciar arriba
+                if (y > canvas.height && Math.random() > 0.975) {
+                    matrixColumns[i] = 0;
+                }
+                matrixColumns[i]++; // Mueve la gota hacia abajo
+            }
+        }
+
+        // --- BUCLE CENTRAL DE ANIMACIÓN (60 FPS) ---
+        function animate() {
+            if (activeEffect === 'fireworks') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles = particles.filter(p => p.alpha > 0);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                if (particles.length === 0) activeEffect = null;
+            } else if (activeEffect === 'matrix') {
+                drawMatrix();
+            } else {
+                // Si no hay efecto activo, limpia el lienzo por completo
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Inicialización
+        resizeCanvas();
+        animate();
+
+        // CONTROL POR TECLADO
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+            if ((key >= '0' && key <= '9') || key === '.') {
+                appendNumber(key);
+            } else if (key === '+' || key === '-' || key === '*' || key === '%') {
+                appendOperator(key);
+            } else if (key.toLowerCase() === 'x') {
+                appendOperator('*');
+            } else if (key === '/') {
+                appendOperator('/');
+            } else if (key === 'Enter' || key === '=') {
+                event.preventDefault(); 
+                calculate();
+            } else if (key === 'Backspace') {
+                deleteLast();
+            } else if (key === 'Escape' || key.toLowerCase() === 'c') {
+                clearDisplay();
+            }
+        });
+    </script>
+</body>
